@@ -112,15 +112,22 @@ def cube_feeder_thread_function(cube_locations):
 def feeder_reset_thread_function(cube_locations):
     client = RemoteAPIClient()
     sim = client.require('sim')
-    
+    i = 0
     global cubes_ext_y_locations
     while sim.getSimulationState() != sim.simulation_stopped:
         if sim.getSimulationState() == sim.simulation_advancing_running:
             time.sleep(3)
-
+            
+            image_arr = get_image_from_vision_sensor()
+            
+            image = Image.fromarray(image_arr, mode='RGB')
+            i += 1
+            image.save(f"images/image{i}.png")
+            
             with cube_locations:
                 cubes_ext_y_locations = []
                 print(f"Cubos resetados")
+
 
 
 #Program start
