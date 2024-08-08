@@ -2,11 +2,14 @@ import numpy as np
 import time
 from threading import Thread, Lock
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
+
 from vision_sensor_script import *
+from discarder_script import *
+
 import matplotlib.pyplot as plt
 from PIL import Image
 
-client = RemoteAPIClient() #REquesting conection with API Client
+client = RemoteAPIClient() #Requesting conection with API Client
 sim = client.require('sim')
 
 #CUBES VARIABLES:
@@ -64,7 +67,9 @@ def generate_cube(y_location, orientation, color, CUBE_SIDE, REF_POINT):
 def cube_feeder_thread_function(cube_locations):
     client = RemoteAPIClient()
     sim = client.require('sim')
+    
     global cubes_ext_y_locations
+    
     while sim.getSimulationState() != sim.simulation_stopped:
         if sim.getSimulationState() == sim.simulation_advancing_running:
             # Defining random location, orientation and color
@@ -112,18 +117,13 @@ def cube_feeder_thread_function(cube_locations):
 def feeder_reset_thread_function(cube_locations):
     client = RemoteAPIClient()
     sim = client.require('sim')
-    i = 0
+
     global cubes_ext_y_locations
+    
     while sim.getSimulationState() != sim.simulation_stopped:
         if sim.getSimulationState() == sim.simulation_advancing_running:
             time.sleep(3)
-            
-            image_arr = get_image_from_vision_sensor()
-            
-            image = Image.fromarray(image_arr, mode='RGB')
-            i += 1
-            image.save(f"images/image{i}.png")
-            
+            descard()
             with cube_locations:
                 cubes_ext_y_locations = []
                 print(f"Cubos resetados")
