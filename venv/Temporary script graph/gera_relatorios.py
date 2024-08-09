@@ -6,8 +6,12 @@ import datetime
 #exemplo: erros = [8003.12312,8004.00120,...]
 #chamada de 15 em 15 segundos
 
+<<<<<<< Updated upstream
 print(datetime.datetime)
 def gera_relatorio(atualiza_dados):
+=======
+def gera_relatorio(df_dados_de_desempenho):
+>>>>>>> Stashed changes
 
     erros_15 = [0,0,0,0,0,0,0,0,0,0]
     acertos_15 = [0,0,0,0,0,0,0,0,0,0]
@@ -18,7 +22,11 @@ def gera_relatorio(atualiza_dados):
     numero_divisao_media_erros =0
     j=1
     while j <= 10:
+<<<<<<< Updated upstream
         for i in range(len(erro)):
+=======
+        for i in range(len(f_dados_de_desempenho[1])):
+>>>>>>> Stashed changes
             if 15*(j-1) < erros[i] - start_time < 15*j:
                 erros_15[j]+= 1
         if erros_15[j] != 0:
@@ -29,7 +37,11 @@ def gera_relatorio(atualiza_dados):
     numero_divisao_media_acertos =0
     j=1
     while j <= 10:
+<<<<<<< Updated upstream
         for i in range(len(acertos)):
+=======
+        for i in range(len(f_dados_de_desempenho[0])):
+>>>>>>> Stashed changes
             if 15*(j-1) < acertos[i] - start_time < 15*j:
                 acertos_15[j] += 1
         if erros_15[j] != 0:
@@ -61,9 +73,22 @@ def gera_relatorio(atualiza_dados):
     plt.axhline(media_erros ,color = 'r', linestyle = 'dashdot')
 
 
+<<<<<<< Updated upstream
     plt.xlabel('Tempo')
+=======
+    plt.xlabel('Tempo(s)')
+>>>>>>> Stashed changes
     plt.ylabel('Quantidade')
     plt.title('Grafico de Erros e Acertos' + datetime.datetime.now())
     plt.legend()
     plt.savefig('relatorio.png')
+<<<<<<< Updated upstream
     return(atualiza_dados)
+=======
+
+    for i in range(len(df_dados_de_desempenho[0])):
+        df_dados_de_desempenho[0].pop()
+    
+    for i in range(len(df_dados_de_desempenho[1])):
+        df_dados_de_desempenho[1].pop()
+>>>>>>> Stashed changes
