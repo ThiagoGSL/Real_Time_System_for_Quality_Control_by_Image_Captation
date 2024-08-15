@@ -4,9 +4,9 @@ from threading import Thread, Lock
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 
 
-def descard():
+
+def activates_discarder():
     client = RemoteAPIClient() #Requesting conection with API Client
     sim = client.require('sim')
-    
     
     sim.setInt32Signal("pode_descartar", 1)
