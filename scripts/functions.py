@@ -1,30 +1,13 @@
-from PIL import Image
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from cv2 import GaussianBlur
 import time
-import functools
+
 from threading import Thread, Lock, Condition, Event
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 from coppelia_scripts.vision_sensor_script import *
-from coppelia_scripts.discarder_script import *
-
-def timing(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        if TEST:
-            start_time = time.perf_counter()
-            for _ in range(1000):
-                result = func(*args, **kwargs)
-            end_time = time.perf_counter()
-            average_time = (end_time - start_time) / 1000
-            print(f"Tempo medio de {func.__name__}: {average_time:.15f}")
-            return result
-        else:
-            return func(*args, **kwargs)
-    return wrapper
 
 
 def Color_check(matrix, col): #This function expects that the image is already processed
@@ -46,16 +29,12 @@ def Color_check(matrix, col): #This function expects that the image is already p
     return color
 
 
-def Change_check(matriz, colmn_check=0, tol=0, img=True):
-    if img:
-        colmn = matriz[:, colmn_check, :]
-        size = colmn.shape[0]
-    else:
-        colmn = matriz
-        size = colmn.size
-    colmn = colmn.astype(int)
+def Change_check(matrix, colmn_check=0, tol=0):
+    colmn = matrix[:, colmn_check, :].astype(int)
+    size = colmn.shape[0]
     changes = 0
     positions = []
+    
     for i in range(1, size):
         c1 = colmn[i]
         c2 = colmn[i - 1]
@@ -69,24 +48,26 @@ def Change_check(matriz, colmn_check=0, tol=0, img=True):
     return int(changes/2), positions
 
 
-def Show_img(matriz, cor_base, col_init, col_end):
-    new_matriz = matriz.copy()
-    new_matriz[:, col_init, :] = cor_base
-    new_matriz[:, col_end, :] = cor_base
-    plt.imshow(new_matriz)
+def Show_img(matrix, cor_base, col_init, col_end):
+    new_matrix = matrix.copy()
+    new_matrix[:, col_init, :] = cor_base
+    new_matrix[:, col_end, :] = cor_base
+    plt.imshow(new_matrix)
     plt.show()
 
 
-def Img_process(matriz):
+def Img_process(matrix):
     black = np.array([0, 0, 0])
-    matriz = GaussianBlur(matriz, (19, 19), 3)
+    matrix = GaussianBlur(matrix, (19, 19), 3)
     sat = 240
     limit = np.array([sat, sat, sat])
-    mask = np.all(matriz < limit, axis=-1)
-    matriz[mask] = black
-    matriz[matriz>100] = 255
-    matriz[matriz<100] = 0
-    return matriz
+    mask = np.all(matrix < limit, axis=-1)
+    matrix[mask] = black
+    
+    # Applying more saturatation to colors and eliminating noise
+    matrix[matrix>100] = 255
+    matrix[matrix<100] = 0
+    return matrix
 
 
 def verify_objects(col_init, col_end):
@@ -110,7 +91,7 @@ def verify_objects(col_init, col_end):
 
             if positions_init and positions_end:
                 for i in range(len(positions_end)):
-                    if np.abs(positions_init[i] - positions_end[i]) < 40:
+                    if np.abs(positions_init[i] - positions_end[i]) < 50:
                         change_check_sum -= 1  
             
             if change_check_sum >= 2:
@@ -150,7 +131,7 @@ def output_report(stop_event):
         if not emergency_stop:
             stop_event.wait(timeout=report_period)
             if emergency_stop:
-                time.sleep(1)
+                time.sleep(0.1)
             with report_lock:
                 
                 hits = performance_data[:,0]
@@ -234,7 +215,6 @@ def reset_button():
     while True:
         input()
         if emergency_stop == True:
-            print("opa")
             if stop_event.is_set():
                 stop_event.clear()
 
@@ -255,7 +235,6 @@ def reset_button():
             stop_conveyor_thread.start()
             
         else:
-            #with stop_condition:
             emergency_stop = True
             stop_event.set()
             
@@ -265,8 +244,6 @@ def reset_button():
 conveyor_target_vel = 0.2
 
 # -- verify object and stop condition:
-stop_condition_lock = Lock()
-stop_condition = Condition(lock=stop_condition_lock)
 emergency_stop = True
 
 object_exists = False
